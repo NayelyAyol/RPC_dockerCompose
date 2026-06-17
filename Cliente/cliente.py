@@ -1,180 +1,135 @@
-# Importa la librería XML-RPC para poder conectarse a un servidor remoto
+# Importa la librería XML-RPC
+# Permite que el cliente se comunique con el servidor remoto
 import xmlrpc.client
 
-
-# Función que muestra el menú de opciones al usuario
+# Función que muestra el menú de opciones
 def menu():
 
-    # Imprime el título del menú
+    # Título del menú
     print("\n===================")
     print(" MENU PELICULAS ")
     print("===================")
 
+    # Opciones disponibles
+    print("1. Crear")       # Registrar película
+    print("2. Buscar")      # Buscar película por ID
+    print("3. Listar")      # Mostrar todas las películas
+    print("4. Actualizar")  # Modificar película
+    print("5. Eliminar")    # Borrar película
+    print("6. Salir")       # Finalizar programa
 
-    # Opciones disponibles del CRUD
-    print("1. Crear")       # Registrar una película
-    print("2. Listar")      # Mostrar películas existentes
-    print("3. Actualizar")  # Modificar una película
-    print("4. Eliminar")    # Borrar una película
-    print("5. Salir")       # Cerrar el programa
-
-
-    # Solicita al usuario una opción y la retorna
+    # Retorna la opción ingresada por teclado
     return input("Seleccione: ")
-
-
-
-
 
 # Función principal del cliente
 def ejecutar_cliente():
 
 
-    # Crea una conexión con el servidor XML-RPC
-    # "servidor" es el nombre del contenedor en Docker
-    # 9000 es el puerto donde escucha el servidor RPC
+    # Crea la conexión con el servidor XML-RPC
+    #
+    # "servidor" corresponde al nombre del servicio
+    # definido en docker-compose
+    #
+    # 9000 es el puerto donde escucha el servidor
     cliente = xmlrpc.client.ServerProxy(
         "http://servidor:9000/"
     )
 
-
-
-    # Mantiene el cliente funcionando hasta que el usuario salga
+    # Mantiene el cliente activo
+    # hasta que el usuario seleccione salir
     while True:
-
-
-        # Muestra el menú y guarda la opción seleccionada
+        # Muestra el menú
         opcion = menu()
 
-
-
-        # Si el usuario selecciona crear película
+        # Crear película
         if opcion == "1":
 
-
-            # Solicita datos de la película
+            # Solicita datos
             nombre = input("Nombre: ")
 
             genero = input("Genero: ")
 
-
-
-            # Llama la función remota del servidor
-            # Envía nombre y género como parámetros
+            # Ejecuta la función remota
+            # del servidor
             respuesta = cliente.crear_pelicula(
                 nombre,
                 genero
             )
 
-
-
-            # Muestra la respuesta enviada por el servidor
+            # Muestra respuesta
             print(respuesta)
 
-
-
-
-
-        # Si el usuario selecciona listar películas
+        # Buscar película
         elif opcion == "2":
 
+            # Solicita el ID de búsqueda
+            id = int(input("ID de la pelicula: "))
 
+            # Llama a la función remota buscar_pelicula()
+            respuesta = cliente.buscar_pelicula(
+                id
+            )
 
-            # Ejecuta la función listar_peliculas()
-            # que existe en el servidor
-            respuesta = cliente.listar_peliculas()
-
-
-
-            # Imprime las películas recibidas
+            # Muestra resultado
             print(respuesta)
 
-
-
-
-
-        # Si el usuario selecciona actualizar
+        # Listar películas
         elif opcion == "3":
 
+            # Llama a la función remota
+            # listar_peliculas()
+            respuesta = cliente.listar_peliculas()
 
-            # Solicita el ID de la película a modificar
-            # int convierte el texto ingresado a número
+            # Imprime películas recibidas
+            print(respuesta)
+
+        # Actualizar película
+        elif opcion == "4":
+
+            # Solicita ID
             id = int(input("ID: "))
-
 
             # Solicita nuevos datos
             nombre = input("Nuevo nombre: ")
 
             genero = input("Nuevo genero: ")
 
-
-
-            # Envía los datos al servidor
-            # para ejecutar actualizar_pelicula()
+            # Ejecuta actualización en servidor
             respuesta = cliente.actualizar_pelicula(
                 id,
                 nombre,
                 genero
             )
 
-
-
             # Muestra resultado
             print(respuesta)
 
+        # Eliminar película
+        elif opcion == "5":
 
-
-
-
-        # Si el usuario selecciona eliminar
-        elif opcion == "4":
-
-
-            # Solicita el ID que se quiere eliminar
+            # Solicita ID a eliminar
             id = int(input("ID: "))
-
-
-
-            # Llama al servidor para eliminar
+            # Llama al método remoto
             respuesta = cliente.eliminar_pelicula(
                 id
             )
-
-
-            # Muestra resultado
+            # Muestra respuesta
             print(respuesta)
 
-
-
-
-
-        # Salir del programa
-        elif opcion == "5":
-
-
+        # Salir
+        elif opcion == "6":
             print("Saliendo...")
 
-
-            # Rompe el ciclo while
+            # Rompe el ciclo
             break
 
-
-
-
-
-        # Si escribe una opción diferente
+        # Opción incorrecta
         else:
-
             print("Opcion incorrecta")
 
-
-
-
-
-
-# Verifica que este archivo sea ejecutado directamente
+# Ejecuta el cliente
+# solamente si este archivo es ejecutado directamente
 if __name__ == "__main__":
 
 
-    # Inicia el cliente RPC
     ejecutar_cliente()

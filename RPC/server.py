@@ -3,9 +3,11 @@ from xmlrpc.server import SimpleXMLRPCServer
 
 
 
-# Lista donde se almacenan las películas en memoria
-# Cada película es un diccionario
+
+# Lista donde se guardan las películas
+# Se almacenan en memoria mientras el servidor esté activo
 peliculas = [
+
 
     {
         "id":1,
@@ -16,27 +18,39 @@ peliculas = [
 ]
 
 
-# Función que devuelve todas las películas registradas
-# Esta función será llamada desde el cliente
+
+
+
+
+
+# Función para listar todas las películas
+# Será llamada remotamente por el cliente
 def listar_peliculas():
 
 
-    # Verifica si la lista está vacía
+
+    # Verifica si no existen películas
     if len(peliculas) == 0:
 
 
-        # Envía mensaje al cliente
         return "No existen peliculas"
 
 
-    # Variable donde se almacenará el resultado
+
+
+
+    # Guarda el resultado final
     resultado = ""
 
 
-    # Recorre cada película de la lista
+
+
+    # Recorre cada película
     for p in peliculas:
 
-        # Agrega los datos de cada película al texto final
+
+
+        # Agrega información al texto
         resultado += (
 
             f"ID: {p['id']} "
@@ -45,8 +59,15 @@ def listar_peliculas():
 
         )
 
-    # Devuelve la lista completa
+
+
+
+    # Devuelve todas las películas
     return resultado
+
+
+
+
 
 
 
@@ -54,12 +75,16 @@ def listar_peliculas():
 # Recibe nombre y género desde el cliente
 def crear_pelicula(nombre,genero):
 
+
+
     # Genera un nuevo ID
-    # Usa el tamaño actual de la lista + 1
     nuevo_id = len(peliculas)+1
 
 
-    # Crea un diccionario con los datos recibidos
+
+
+
+    # Crea la película
     pelicula = {
 
 
@@ -74,12 +99,13 @@ def crear_pelicula(nombre,genero):
 
 
 
-    # Guarda la nueva película dentro de la lista
+
+    # Guarda la película en la lista
     peliculas.append(pelicula)
 
 
 
-    # Devuelve respuesta al cliente
+
     return "Película creada correctamente"
 
 
@@ -88,9 +114,12 @@ def crear_pelicula(nombre,genero):
 
 
 
-# Función para actualizar una película
-# Recibe ID, nuevo nombre y nuevo género
-def actualizar_pelicula(id,nombre,genero):
+
+
+# Función para buscar una película
+# Recibe el ID desde el cliente
+def buscar_pelicula(id):
+
 
 
     # Recorre todas las películas
@@ -98,28 +127,24 @@ def actualizar_pelicula(id,nombre,genero):
 
 
 
-        # Busca la película con el ID recibido
+        # Busca coincidencia de ID
         if p["id"] == id:
 
 
 
-            # Cambia el nombre anterior
-            p["nombre"] = nombre
+            # Devuelve los datos encontrados
+            return (
 
+                f"ID: {p['id']} "
+                f"Nombre: {p['nombre']} "
+                f"Genero: {p['genero']}"
 
-
-            # Cambia el género anterior
-            p["genero"] = genero
-
-
-
-            # Confirma actualización
-            return "Película actualizada"
+            )
 
 
 
 
-    # Si no encontró el ID
+    # Si no encuentra la película
     return "Película no encontrada"
 
 
@@ -128,8 +153,11 @@ def actualizar_pelicula(id,nombre,genero):
 
 
 
-# Función para eliminar una película
-def eliminar_pelicula(id):
+
+
+# Función para actualizar una película
+def actualizar_pelicula(id,nombre,genero):
+
 
 
     # Recorre las películas
@@ -137,23 +165,25 @@ def eliminar_pelicula(id):
 
 
 
-        # Busca coincidencia por ID
+        # Busca el ID indicado
         if p["id"] == id:
 
 
 
-            # Elimina la película encontrada
-            peliculas.remove(p)
+            # Actualiza datos
+            p["nombre"] = nombre
 
-
-
-            # Envía respuesta
-            return "Película eliminada"
+            p["genero"] = genero
 
 
 
 
-    # Si no existe
+            return "Película actualizada"
+
+
+
+
+
     return "Película no encontrada"
 
 
@@ -162,66 +192,83 @@ def eliminar_pelicula(id):
 
 
 
-# Crea el servidor XML-RPC
+
+
+# Función para eliminar película
+def eliminar_pelicula(id):
+
+
+
+    # Recorre películas
+    for p in peliculas:
+
+
+
+        # Busca coincidencia
+        if p["id"] == id:
+
+
+
+            # Elimina película
+            peliculas.remove(p)
+
+
+
+            return "Película eliminada"
+
+
+
+
+
+    return "Película no encontrada"
+
+
+
+
+
+
+
+
+
+
+# Crea servidor XML-RPC
+#
 # 0.0.0.0 permite recibir conexiones externas
-# 9000 es el puerto del servidor
+#
+# 9000 es el puerto donde escucha
 server = SimpleXMLRPCServer(
     ("0.0.0.0",9000)
 )
 
+# Publica funciones para que el cliente pueda usarlas
 
-
-
-
-
-# Publica la función listar_peliculas
-# Ahora puede ser llamada desde el cliente
-server.register_function(
-    listar_peliculas,
-    "listar_peliculas"
-)
-
-
-
-
-
-# Publica crear_pelicula
 server.register_function(
     crear_pelicula,
     "crear_pelicula"
 )
 
+server.register_function(
+    buscar_pelicula,
+    "buscar_pelicula"
+)
 
+server.register_function(
+    listar_peliculas,
+    "listar_peliculas"
+)
 
-
-
-# Publica actualizar_pelicula
 server.register_function(
     actualizar_pelicula,
     "actualizar_pelicula"
 )
 
-
-
-
-
-# Publica eliminar_pelicula
 server.register_function(
     eliminar_pelicula,
     "eliminar_pelicula"
 )
 
-
-
-
-
-# Mensaje cuando el servidor inicia
+# Mensaje cuando inicia
 print("Servidor RPC activo puerto 9000")
 
-
-
-
-
-# Mantiene el servidor escuchando peticiones
-# Nunca termina hasta detener el contenedor
+# Mantiene el servidor esperando solicitudes
 server.serve_forever()
