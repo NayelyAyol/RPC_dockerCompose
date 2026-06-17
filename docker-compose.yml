@@ -1,0 +1,46 @@
+# Versión del formato de Docker Compose
+# (En versiones nuevas de Docker ya no es obligatorio)
+version: "3.8"
+
+# Define los contenedores que formarán parte de la aplicación
+services:
+  # Nombre del servicio del servidor RPC
+  # Este nombre también será usado por el cliente para conectarse
+  servidor:
+    # Indica que Docker debe construir la imagen usando un Dockerfile
+    build:
+      # Carpeta donde se encuentra el Dockerfile del servidor
+      context: ./RPC
+    # Nombre personalizado del contenedor
+    container_name: servidor
+    # Mapea puertos entre la máquina y el contenedor
+    #
+    # Formato:
+    # puerto_maquina : puerto_contenedor
+    #
+    # El servidor escucha en el puerto 9000 dentro del contenedor
+    ports:
+      - "9000:9000"
+
+  # Servicio del cliente RPC
+  cliente:
+    # Construye la imagen usando el Dockerfile
+    # ubicado dentro de la carpeta Cliente
+    build:
+      # Ruta donde está el Dockerfile del cliente
+      context: ./Cliente
+    # Nombre del contenedor del cliente
+    container_name: cliente
+    # Permite mantener abierto el teclado
+    # para ingresar datos desde consola
+    stdin_open: true
+    # Asigna una terminal interactiva
+    # necesario para usar input() en Python
+    tty: true
+
+    # Indica que este servicio depende del servidor
+    #
+    # Docker iniciará primero el contenedor servidor
+    # y luego intentará iniciar el cliente
+    depends_on:
+      - servidor
