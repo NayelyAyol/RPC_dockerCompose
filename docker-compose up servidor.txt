@@ -1,0 +1,82 @@
+ docker-compose up servidor
+docker-compose run --rm cliente
+No te cambio la lógica del código. El problema es solo la conexión de puertos.
+
+Ahora mismo tienes:
+
+Servidor Python
+servidor = SimpleXMLRPCServer(("0.0.0.0",9000))
+
+Eso significa:
+
+Dentro del contenedor el servidor escucha en el puerto 9000.
+
+Docker Compose
+
+Tienes:
+
+ports:
+  - "8000:9000"
+
+Esto significa:
+
+PC:8000  --->  CONTENEDOR:9000
+
+Es decir, desde tu máquina entrarías por localhost:8000.
+
+PERO...
+
+Tu cliente está dentro de otro contenedor:
+
+cliente_xmlrpc = xmlrpc.client.ServerProxy("http://servidor:8000/")
+
+Aquí está el error.
+
+Dentro de Docker el cliente NO usa el puerto externo (8000), usa el puerto interno del servicio (9000).
+
+Cambia solamente esta línea:
+
+cliente_xmlrpc = xmlrpc.client.ServerProxy("http://servidor:9000/")
+
+Nada más.
+
+
+2. Borra contenedores + imágenes viejas
+
+Haz:
+
+docker compose down --rmi all
+
+Eso elimina:
+
+contenedores
+imágenes creadas por compose
+3. Limpia caché de Docker
+
+Docker puede reutilizar capas antiguas del COPY:
+
+docker builder prune
+
+Acepta con:
+
+y
+4. Reconstruye obligatoriamente sin caché
+
+Ejecuta:
+
+docker compose build --no-cache
+
+Aquí debe salir algo como:
+
+COPY server.py
+5. Levanta solo el servidor
+docker compose up servidor
+
+Debe aparecer:
+
+Servidor RPC activo puerto 9000
+
+Déjalo abierto.
+
+6. En otra terminal prueba cliente
+docker compose run --rm cliente
